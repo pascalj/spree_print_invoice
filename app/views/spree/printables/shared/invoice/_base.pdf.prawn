@@ -8,7 +8,7 @@ prawn_document(force_download: true) do |pdf|
   pdf.font font_style[:face], size: font_style[:size]
 
   pdf.repeat(:all) do
-    render 'spree/printables/shared/header', pdf: pdf, printable: doc
+    render 'spree/printables/shared/header', pdf: pdf, invoice: doc
   end
 
   # CONTENT
@@ -16,7 +16,7 @@ prawn_document(force_download: true) do |pdf|
 
     # address block on first page only
     if pdf.page_number == 1
-      render 'spree/printables/shared/address_block', pdf: pdf, printable: doc
+      render 'spree/printables/shared/address_block', pdf: pdf, printable: printable
     end
 
     pdf.move_down 10

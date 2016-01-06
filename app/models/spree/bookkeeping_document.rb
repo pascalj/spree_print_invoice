@@ -19,8 +19,20 @@ module Spree
     validates *PERSISTED_ATTRS, presence: true, if: -> { self.persisted? }
     scope :invoices, -> { where(template: 'invoice') }
 
-    before_create :copy_view_attributes
-    after_save :after_save_actions
+    # Store next document number
+    before_create do
+      self[:document_number] = next_document_number
+    end
+
+    before_create :persist_view_attributes
+
+    class << self
+
+      # The maximum document number from all documents
+      def current_document_number
+        maximum(:document_number)
+      end
+    end
 
     # An instance of Spree::Printable::#{YourModel}::#{YourTemplate}Presenter
     #
@@ -109,16 +121,30 @@ module Spree
     def render_pdf
       ActionView::Base.new(
         ActionController::Base.view_paths,
-        doc: self
+        {
+          doc: self,
+          printable: self.printable
+        }
       ).render(template: "#{template_name}.pdf.prawn")
     end
 
     private
 
-    def copy_view_attributes
+    # Get document number from database and increments it
+    #
+    # If no document number is present we use the value from the configuration.
+    # If nothing is configured we fall back to 1.
+    #
+    def next_document_number
+      self.class.current_document_number.try(:+, 1) ||
+        Spree::PrintInvoice::Config.get(:next_number) || 1
+    end
+
+    def persist_view_attributes
       PERSISTED_ATTRS.each do |attr|
         send("#{attr}=", view.send(attr))
       end
+      number = view.number(document_number)
     end
 
     # For a Spree::Order printable and an "invoice" template,

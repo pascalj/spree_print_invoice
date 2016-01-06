@@ -28,11 +28,6 @@ module Spree
       next_number.present? && next_number > 0
     end
 
-    def increase_invoice_number!
-      current_invoice_number = next_number
-      set_preference(:next_number, current_invoice_number + 1)
-    end
-
     def font_faces
       ::Prawn::Font::AFM::BUILT_INS.reject do |font|
         font =~ /zapf|symbol|bold|italic|oblique/i

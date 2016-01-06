@@ -1,10 +1,7 @@
 module Spree
   class Printables::Order::PackagingSlipView < Printables::Order::InvoiceView
-    def number
+    def number(number = nil)
       printable.number
-    end
-
-    def after_save_actions
     end
   end
 end

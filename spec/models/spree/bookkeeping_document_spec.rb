@@ -45,6 +45,59 @@ RSpec.describe Spree::BookkeepingDocument do
     end
   end
 
+  describe '#next_document_number' do
+    let(:address) { FactoryGirl.create(:address) }
+
+    let(:printable) do
+      Spree::Order.new(bill_address: address, ship_address: address)
+    end
+
+    context 'if a document_number is present' do
+      before do
+        doc = Spree::BookkeepingDocument.create!(
+          printable: printable,
+          template: 'invoice'
+        )
+        doc.update_column(:document_number, 41)
+        subject.save!
+      end
+
+      it 'returns the document_number incremented by one' do
+        expect(subject.document_number).to eq(42)
+      end
+    end
+
+    context 'if document_number is nil' do
+      subject(:document) do
+        Spree::BookkeepingDocument.create!(
+          printable: printable,
+          template: 'invoice',
+          document_number: nil
+        )
+      end
+
+      context "and next_number is configured" do
+        before do
+          allow(Spree::PrintInvoice::Config).to receive(:get) { 11 }
+        end
+
+        it 'returns the next number from settings' do
+          expect(document.document_number).to eq(11)
+        end
+      end
+
+      context "and next_number is not configured" do
+        before do
+          allow(Spree::PrintInvoice::Config).to receive(:get) { nil }
+        end
+
+        it 'returns 1' do
+          expect(document.document_number).to eq(1)
+        end
+      end
+    end
+  end
+
   describe 'validations' do
     let(:pdf) { Spree::BookkeepingDocument.new }
     it 'is not valid without aa printable' do
@@ -66,26 +119,12 @@ RSpec.describe Spree::BookkeepingDocument do
       pdf.save
       expect(pdf.number).to eq('1')
     end
-
-    it 'sets a new invoice number when saving' do
-      expect(Spree::PrintInvoice::Config).to receive(:increase_invoice_number!)
-      pdf.save
-    end
-
-    it 'does not assign a new number when the save fails' do
-      expect(Spree::PrintInvoice::Config).not_to receive(:increase_invoice_number!)
-
-      expect do
-        pdf.printable = nil # make it invalid
-        pdf.save!
-      end.to raise_error(ActiveRecord::RecordInvalid)
-    end
   end
 
   describe 'method_missing' do
     it 'sends stuff that the view knows to the view' do
-      expect_any_instance_of(Spree::Printables::Order::InvoiceView).to receive(:after_save_actions)
-      subject.after_save_actions
+      expect_any_instance_of(Spree::Printables::Order::InvoiceView).to receive(:items)
+      subject.items
     end
 
     it 'accurately reports missing methods as missing' do

@@ -33,14 +33,6 @@ RSpec.describe Spree::PrintInvoiceSetting do
     end
   end
 
-  describe '#increase_invoice_number' do
-    it 'increases invoice numer by one' do
-      subject.next_number = 100
-      subject.increase_invoice_number!
-      expect(subject.next_number).to be(101)
-    end
-  end
-
   describe '#font_faces' do
     it 'has a list of font faces' do
       expect(subject.font_faces).to be_a(Array)
