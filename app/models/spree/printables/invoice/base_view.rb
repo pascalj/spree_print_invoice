@@ -58,31 +58,8 @@ module Spree
       shipments.map(&:shipping_method).map(&:name)
     end
 
-    def number(number = next_number)
-      if use_sequential_number?
-        formatted_number(number)
-      else
-        printable.number
-      end
-    end
-
-    def formatted_number(number = next_number)
-      if (Object.const_get('::Spree::PrintInvoice::NumberFormatter') rescue false)
-        ::Spree::PrintInvoice::NumberFormatter.new(number).to_s
-      else
-        number
-      end
-    end
-
-    private
-
-    def next_number
-      Spree::PrintInvoice::Config.next_number
-    end
-
-    def use_sequential_number?
-      @_use_sequential_number ||=
-        Spree::PrintInvoice::Config.use_sequential_number?
+    def number
+      document.number
     end
   end
 end

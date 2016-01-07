@@ -1,6 +1,7 @@
 RSpec.describe Spree::Printables::BaseView do
   let(:printable) { Object.new }
-  let(:base_view) { Spree::Printables::BaseView.new(printable) }
+  let(:document) { Object.new }
+  let(:base_view) { Spree::Printables::BaseView.new(printable, document) }
 
   describe 'initialization' do
     it 'assigns printable' do

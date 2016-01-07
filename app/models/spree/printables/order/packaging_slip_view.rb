@@ -6,9 +6,5 @@ module Spree
         Spree::PrintInvoice::Config.packaging_slip_number_prefix
       end
     end
-
-    def number(number = nil)
-      printable.number
-    end
   end
 end

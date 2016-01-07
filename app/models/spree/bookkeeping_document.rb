@@ -37,7 +37,7 @@ module Spree
     # An instance of Spree::Printable::#{YourModel}::#{YourTemplate}Presenter
     #
     def view
-      @_view ||= view_class.new(printable)
+      @_view ||= view_class.new(printable, self)
     end
 
     def date
@@ -138,11 +138,20 @@ module Spree
         Spree::PrintInvoice::Config.next_number || 1
     end
 
+    def formatted_number
+      if (Object.const_get('::Spree::PrintInvoice::NumberFormatter') rescue false)
+        Spree::PrintInvoice::NumberFormatter.new(document_number_prefix, document_number).to_s
+      else
+        "#{document_number_prefix}#{document_number}"
+      end
+    end
+
     private
 
     def store_next_document_number
       self.document_number_prefix = number_prefix
       self.document_number = next_document_number
+      self.number = formatted_number
     end
 
     # Scope that gets passed to +where+ in +Spree::BookkeepingDocument.current_document_number+
@@ -162,7 +171,6 @@ module Spree
       PERSISTED_ATTRS.each do |attr|
         send("#{attr}=", view.send(attr))
       end
-      number = view.number(document_number)
     end
 
     # For a Spree::Order printable and an "invoice" template,

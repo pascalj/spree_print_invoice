@@ -27,10 +27,6 @@ module Spree
       %w(landscape portrait)
     end
 
-    def use_sequential_number?
-      next_number.present? && next_number > 0
-    end
-
     def font_faces
       ::Prawn::Font::AFM::BUILT_INS.reject do |font|
         font =~ /zapf|symbol|bold|italic|oblique/i

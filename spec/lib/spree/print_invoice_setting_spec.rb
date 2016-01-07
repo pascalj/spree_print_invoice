@@ -15,24 +15,6 @@ RSpec.describe Spree::PrintInvoiceSetting do
     end
   end
 
-  describe '#use_sequential_number?' do
-    context 'when :next_number set' do
-      before { subject.next_number = 100 }
-
-      it 'uses sequential number' do
-        expect(subject.use_sequential_number?).to be(true)
-      end
-    end
-
-    context 'when :next_number nil' do
-      before { subject.next_number = nil }
-
-      it 'does not use sequential number' do
-        expect(subject.use_sequential_number?).to be(false)
-      end
-    end
-  end
-
   describe '#font_faces' do
     it 'has a list of font faces' do
       expect(subject.font_faces).to be_a(Array)

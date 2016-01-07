@@ -1,6 +1,7 @@
 RSpec.describe Spree::BookkeepingDocument do
   let(:printable) { Spree::Order.new }
   let(:template) { 'invoice' }
+
   subject { Spree::BookkeepingDocument.new(printable: printable, template: 'invoice') }
 
   describe 'attributes' do
@@ -119,26 +120,62 @@ RSpec.describe Spree::BookkeepingDocument do
     end
   end
 
+  describe '#formatted_number' do
+    let(:address) { FactoryGirl.create(:address) }
+
+    let(:printable) do
+      Spree::Order.new(bill_address: address, ship_address: address)
+    end
+
+    subject(:document) do
+      Spree::BookkeepingDocument.create!(
+        printable: printable,
+        template: 'invoice',
+        document_number: nil
+      )
+    end
+
+    before do
+      allow(Spree::PrintInvoice::Config).to receive(:next_number) { 77 }
+      allow(Spree::PrintInvoice::Config).to receive(:invoice_number_prefix) { 'INVOICE' }
+    end
+
+    context 'when using a NumberFormatter' do
+      before do
+        class Spree::PrintInvoice::NumberFormatter
+          attr_reader :prefix, :number
+
+          def initialize(prefix, number)
+            @prefix = prefix
+            @number = number
+          end
+
+          def to_s
+            "MY-NICE-#{prefix}-#{number}"
+          end
+        end
+      end
+
+      it 'returns a nicely formatted number' do
+        expect(document.formatted_number).to eq("MY-NICE-INVOICE-77")
+      end
+    end
+
+    context 'when using no formatter' do
+      before do
+        Spree::PrintInvoice.send(:remove_const, 'NumberFormatter')
+      end
+
+      it 'returns a joined number' do
+        expect(document.formatted_number).to eq("INVOICE77")
+      end
+    end
+  end
+
   describe 'validations' do
     let(:pdf) { Spree::BookkeepingDocument.new }
     it 'is not valid without aa printable' do
       expect(pdf).not_to be_valid
-    end
-  end
-
-  describe 'creation' do
-    let(:printable) { create :order_ready_to_ship }
-    let(:pdf) { Spree::BookkeepingDocument.new(printable: printable, template: 'invoice') }
-
-    before do
-      Spree::PrintInvoice::Config.set(next_number: 1)
-      allow(pdf).to receive(:created_at) { Date.today }
-    end
-
-    it 'automatically has an formatted invoice number after saving' do
-      expect(pdf.number).to eq(nil)
-      pdf.save
-      expect(pdf.number).to eq('1')
     end
   end
 

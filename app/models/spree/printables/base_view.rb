@@ -5,12 +5,13 @@ module Spree
     extend Forwardable
     extend Spree::DisplayMoney
 
-    attr_reader :printable
+    attr_reader :printable, :document
 
     money_methods :item_total, :total
 
-    def initialize(printable)
+    def initialize(printable, document)
       @printable = printable
+      @document = document
     end
 
     def firstname
