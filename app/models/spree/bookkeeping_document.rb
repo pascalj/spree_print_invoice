@@ -20,17 +20,17 @@ module Spree
     scope :invoices, -> { where(template: 'invoice') }
 
     # Store next document number
-    before_create do
-      self[:document_number] = next_document_number
-    end
-
+    before_create :store_next_document_number
     before_create :persist_view_attributes
 
     class << self
 
-      # The maximum document number from all documents
-      def current_document_number
-        maximum(:document_number)
+      # The maximum document number from all invoice documents
+      #
+      # You may pass a scope
+      #
+      def current_document_number(number_scope = nil)
+        where(number_scope).maximum(:document_number)
       end
     end
 
@@ -128,16 +128,34 @@ module Spree
       ).render(template: "#{template_name}.pdf.prawn")
     end
 
-    private
-
     # Get document number from database and increments it
     #
     # If no document number is present we use the value from the configuration.
     # If nothing is configured we fall back to 1.
     #
     def next_document_number
-      self.class.current_document_number.try(:+, 1) ||
-        Spree::PrintInvoice::Config.get(:next_number) || 1
+      self.class.current_document_number(number_scope).try(:+, 1) ||
+        Spree::PrintInvoice::Config.next_number || 1
+    end
+
+    private
+
+    def store_next_document_number
+      self.document_number_prefix = number_prefix
+      self.document_number = next_document_number
+    end
+
+    # Scope that gets passed to +where+ in +Spree::BookkeepingDocument.current_document_number+
+    def number_scope
+      return unless number_prefix
+      {
+        document_number_prefix: number_prefix
+      }
+    end
+
+    # Ask the +view+ class, if a +document_number_prefix+ is configured
+    def number_prefix
+      view_class.try(:document_number_prefix)
     end
 
     def persist_view_attributes

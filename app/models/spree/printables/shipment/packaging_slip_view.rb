@@ -1,5 +1,12 @@
 module Spree
   class Printables::Shipment::PackagingSlipView
+
+    class << self
+      def document_number_prefix
+        Spree::PrintInvoice::Config.packaging_slip_number_prefix
+      end
+    end
+
     def initialize(shipment)
       @shipment = shipment
     end

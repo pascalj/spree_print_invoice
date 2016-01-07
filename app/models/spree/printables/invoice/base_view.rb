@@ -9,6 +9,12 @@ module Spree
 
     money_methods :item_total, :total
 
+    class << self
+      def document_number_prefix
+        Spree::PrintInvoice::Config.invoice_number_prefix
+      end
+    end
+
     def bill_address
       raise NotImplementedError, 'Please implement bill_address'
     end

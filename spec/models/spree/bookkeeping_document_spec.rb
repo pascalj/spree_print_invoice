@@ -67,6 +67,27 @@ RSpec.describe Spree::BookkeepingDocument do
       end
     end
 
+    context 'if a document_number_prefix is present' do
+      before do
+        doc = Spree::BookkeepingDocument.create!(
+          printable: printable,
+          template: 'invoice'
+        )
+        doc.update_columns(document_number: 411, document_number_prefix: 'I-')
+        doc = Spree::BookkeepingDocument.create!(
+          printable: printable,
+          template: 'packaging_slip'
+        )
+        doc.update_columns(document_number: 412, document_number_prefix: 'P-')
+        subject.save!
+      end
+
+      it 'returns the document_number incremented by one' do
+        expect(subject.document_number).to eq(412)
+        expect(subject.document_number).to_not eq(413)
+      end
+    end
+
     context 'if document_number is nil' do
       subject(:document) do
         Spree::BookkeepingDocument.create!(
@@ -78,7 +99,7 @@ RSpec.describe Spree::BookkeepingDocument do
 
       context "and next_number is configured" do
         before do
-          allow(Spree::PrintInvoice::Config).to receive(:get) { 11 }
+          allow(Spree::PrintInvoice::Config).to receive(:next_number) { 11 }
         end
 
         it 'returns the next number from settings' do
@@ -88,7 +109,7 @@ RSpec.describe Spree::BookkeepingDocument do
 
       context "and next_number is not configured" do
         before do
-          allow(Spree::PrintInvoice::Config).to receive(:get) { nil }
+          allow(Spree::PrintInvoice::Config).to receive(:next_number) { nil }
         end
 
         it 'returns 1' do
@@ -114,7 +135,7 @@ RSpec.describe Spree::BookkeepingDocument do
       allow(pdf).to receive(:created_at) { Date.today }
     end
 
-    it 'automatically has an invoice number after saving' do
+    it 'automatically has an formatted invoice number after saving' do
       expect(pdf.number).to eq(nil)
       pdf.save
       expect(pdf.number).to eq('1')

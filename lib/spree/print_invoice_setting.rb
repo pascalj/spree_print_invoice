@@ -16,6 +16,9 @@ module Spree
     preference :store_pdf,        :boolean, default: false
     preference :storage_path,     :string,  default: 'tmp/invoice_prints'
 
+    preference :invoice_number_prefix,        :string,  default: 'I-'
+    preference :packaging_slip_number_prefix, :string,  default: 'P-'
+
     def page_sizes
       ::PDF::Core::PageGeometry::SIZES.keys
     end
